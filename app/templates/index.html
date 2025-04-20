@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heart Disease Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        input {
+            margin: 5px 0;
+            width: 200px;
+            padding: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Heart Disease Prediction Form</h2>
+    <form id="predictionForm">
+        <div id="fields">
+            <!-- Generate 14 input fields -->
+            <script>
+                for (let i = 1; i <= 14; i++) {
+                    document.write(`<label for="feature${i}">Feature ${i}:</label><br>`);
+                    document.write(`<input type="number" step="any" id="feature${i}" name="feature${i}" required><br><br>`);
+                }
+            </script>
+        </div>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = {};
+            for (let i = 1; i <= 14; i++) {
+                formData[`feature${i}`] = parseFloat(document.getElementById(`feature${i}`).value);
+            }
+
+            try {
+                const response = await fetch('/predict/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        Prediction Score: ${result.prediction_score}<br>
+                        Result: ${result.result}
+                    `;
+                } else {
+                    document.getElementById('result').innerText = result.error;
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = 'Error: ' + error;
+            }
+        });
+    </script>
+</body>
+</html>
