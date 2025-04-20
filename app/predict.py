@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, render_template
+from flask_login import login_required, current_user
 import pickle
 import numpy as np
-from .database import db
+from .database import db, User
 
 predict_bp = Blueprint('predict', __name__)
 
@@ -9,27 +10,23 @@ predict_bp = Blueprint('predict', __name__)
 with open('model.pkl', 'rb') as model_file:
     model = pickle.load(model_file)
 
-@predict_bp.route('/predict', methods=['POST'])
-def predict():
-    data = request.get_json()
+# Route for the prediction page (accessible only after login)
+@predict_bp.route('/predict', methods=['GET', 'POST'])
+@login_required
+def predict_page():
+    if request.method == 'POST':
+        data = request.form
+        features = [float(data[f'feature{i+1}']) for i in range(14)]  # Extracting features from the form
 
-    try:
-        # Extract and format features (assuming 14 features)
-        features = [
-            float(data[f'feature{i+1}']) for i in range(14)  # Ensure you're passing the correct number of features
-        ]
         input_data = np.array(features).reshape(1, -1)
-
-        # Make prediction
-        prediction = model.predict(input_data)[0]  # Directly using the model to predict
-
-        # Interpret result
+        prediction = model.predict(input_data)[0]  # Make prediction
         result = "High possibility of heart disease" if prediction <= 0.5 else "Low possibility of heart disease"
 
-        return jsonify({
-            'prediction_score': float(prediction),
-            'result': result
-        }), 200
+        # ✅ Update current logged-in user's prediction data
+        current_user.prediction_score = float(prediction)
+        current_user.prediction_result = result
+        db.session.commit()
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return render_template('predict.html', prediction_score=prediction, result=result)
+    
+    return render_template('predict.html')

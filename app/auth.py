@@ -1,41 +1,58 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for, render_template, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, logout_user, login_required
 from .database import db, User
 
 auth_bp = Blueprint('auth', __name__)
 
-# Signup Route
-@auth_bp.route('/signup', methods=['POST'])
+@auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
-    data = request.get_json()
+    if request.method == 'POST':
+        data = request.form
+        email = data.get('email')
+        username = data.get('username')
+        password = data.get('password')
 
-    # Check if user already exists by email
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'message': 'User already exists'}), 409
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists. Please login.', 'error')
+            return redirect(url_for('auth.login'))
 
-    # Hash the password before storing
-    hashed_pw = generate_password_hash(data['password'])
+        new_user = User(
+            email=email,
+            username=username,
+            password=generate_password_hash(password)
+        )
 
-    # Create a new user instance with email, username, and hashed password
-    new_user = User(email=data['email'], username=data['username'], password=hashed_pw)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Account created successfully. Please log in.', 'success')
+        return redirect(url_for('auth.login'))
 
-    # Add the user to the database and commit the changes
-    db.session.add(new_user)
-    db.session.commit()
+    return render_template('signup.html')
 
-    return jsonify({'message': 'User created successfully'}), 201
 
-# Login Route
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
+    if request.method == 'POST':
+        data = request.form
+        email = data.get('email')
+        password = data.get('password')
 
-    # Retrieve user by email
-    user = User.query.filter_by(email=data['email']).first()
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('predict.predict_page'))
+        else:
+            flash('Invalid email or password', 'error')
+            return redirect(url_for('auth.login'))
 
-    # Check if the user exists and the password matches
-    if user and check_password_hash(user.password, data['password']):
-        return jsonify({'message': 'Login successful'}), 200
+    return render_template('login.html')
 
-    # If credentials are invalid, return an error
-    return jsonify({'message': 'Invalid credentials'}), 401
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully.', 'success')
+    return redirect(url_for('auth.login'))

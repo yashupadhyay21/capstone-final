@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heart Disease Prediction</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Heart Disease Prediction</h2>
+
+    <form method="POST" class="p-4 shadow bg-white rounded">
+        {% for i in range(1, 15) %}
+            <div class="form-group">
+                <label for="feature{{ i }}">Feature {{ i }}</label>
+                <input type="number" step="any" class="form-control" name="feature{{ i }}" id="feature{{ i }}" required>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary btn-block">Predict</button>
+    </form>
+
+    {% if prediction_score is defined and result is defined %}
+        <div class="alert alert-info mt-4 text-center">
+            <strong>Prediction Score:</strong> {{ prediction_score }}<br>
+            <strong>Result:</strong> {{ result }}
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
