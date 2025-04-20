@@ -21,6 +21,11 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        #loginResult {
+            margin-top: 20px;
+            font-weight: bold;
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -40,7 +45,39 @@
 
     <div id="result"></div>
 
+    <!-- Signup Form -->
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+        <label for="signupEmail">Email:</label><br>
+        <input type="email" id="signupEmail" name="signupEmail" required><br><br>
+
+        <label for="signupUsername">Username:</label><br>
+        <input type="text" id="signupUsername" name="signupUsername" required><br><br>
+
+        <label for="signupPassword">Password:</label><br>
+        <input type="password" id="signupPassword" name="signupPassword" required><br><br>
+
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <div id="signupResult"></div>
+
+    <!-- Login Form -->
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <div id="loginResult"></div>
+
     <script>
+        // Handle Prediction Form Submission
         document.getElementById('predictionForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -69,6 +106,65 @@
                 }
             } catch (error) {
                 document.getElementById('result').innerText = 'Error: ' + error;
+            }
+        });
+
+        // Handle Signup Form Submission
+        document.getElementById('signupForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = {
+                email: document.getElementById('signupEmail').value,
+                username: document.getElementById('signupUsername').value,
+                password: document.getElementById('signupPassword').value
+            };
+
+            try {
+                const response = await fetch('/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('signupResult').innerText = result.message;
+                } else {
+                    document.getElementById('signupResult').innerText = result.message;
+                }
+            } catch (error) {
+                document.getElementById('signupResult').innerText = 'Error: ' + error;
+            }
+        });
+
+        // Handle Login Form Submission
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('loginResult').innerText = result.message;
+                } else {
+                    document.getElementById('loginResult').innerText = result.message;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerText = 'Error: ' + error;
             }
         });
     </script>
