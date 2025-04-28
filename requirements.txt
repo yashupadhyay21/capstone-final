@@ -3,3 +3,4 @@ flask_sqlalchemy
 tensorflow
 numpy
 werkzeug
+scikit-learn
