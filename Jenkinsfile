@@ -16,22 +16,16 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}:${TAG}")
-                }
+                bat "docker build -t ${IMAGE_NAME}:${TAG} ."
             }
         }
 
         stage('Run Docker Container') {
             steps {
-                script {
-                    // Stop & remove old container if exists
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
-
-                    // Run new container
-                    sh "docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME}:${TAG}"
-                }
+                // Windows doesn't support `|| true`, so use `exit 0` to suppress errors
+                bat "docker stop ${CONTAINER_NAME} || exit 0"
+                bat "docker rm ${CONTAINER_NAME} || exit 0"
+                bat "docker run -d --name ${CONTAINER_NAME} -p 5000:5000 ${IMAGE_NAME}:${TAG}"
             }
         }
     }
